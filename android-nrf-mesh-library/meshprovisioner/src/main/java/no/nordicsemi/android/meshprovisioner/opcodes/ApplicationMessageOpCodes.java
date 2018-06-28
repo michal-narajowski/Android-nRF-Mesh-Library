@@ -44,4 +44,7 @@ public class ApplicationMessageOpCodes {
      */
     public static final short GENERIC_ON_OFF_STATUS = (short) 0x8204;
 
+
+    public static final int SENSOR_GET = 0x8231;
+    public static final short SENSOR_STATUS = (short) 0x52;
 }

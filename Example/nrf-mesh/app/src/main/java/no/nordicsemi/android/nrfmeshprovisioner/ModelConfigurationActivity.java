@@ -54,6 +54,7 @@ import no.nordicsemi.android.meshprovisioner.configuration.ConfigModelAppStatus;
 import no.nordicsemi.android.meshprovisioner.configuration.ProvisionedMeshNode;
 import no.nordicsemi.android.meshprovisioner.configuration.MeshModel;
 import no.nordicsemi.android.meshprovisioner.models.GenericOnOffServerModel;
+import no.nordicsemi.android.meshprovisioner.models.SensorServer;
 import no.nordicsemi.android.meshprovisioner.utils.Element;
 import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils;
 import no.nordicsemi.android.nrfmeshprovisioner.adapter.AddressAdapter;
@@ -95,7 +96,7 @@ public class ModelConfigurationActivity extends AppCompatActivity implements Inj
     ProgressBar mProgressbar;
 
     private Handler mHandler;
-    private  ModelConfigurationViewModel mViewModel;
+    private ModelConfigurationViewModel mViewModel;
     private List<byte[]> mGroupAddress = new ArrayList<>();
     private AddressAdapter mAddressAdapter;
     private Button mActionOnOff;
@@ -320,7 +321,7 @@ public class ModelConfigurationActivity extends AppCompatActivity implements Inj
 
     }
 
-    private void addGenericOnOffControls(MeshModel model) {
+    private void addGenericOnOffControls() {
         final CardView cardView = findViewById(R.id.node_controls_card);
         final View nodeControlsContainer = LayoutInflater.from(this).inflate(R.layout.layout_generic_on_off, cardView);
         final TextView time = nodeControlsContainer.findViewById(R.id.transition_time);
@@ -383,11 +384,47 @@ public class ModelConfigurationActivity extends AppCompatActivity implements Inj
         });
     }
 
+    private void addSensorControls() {
+        final CardView cardView = findViewById(R.id.node_controls_card);
+        final View nodeControlsContainer = LayoutInflater.from(this).inflate(R.layout.layout_sensor, cardView);
+
+        final TextView time = nodeControlsContainer.findViewById(R.id.transition_time);
+        final TextView sensorStateText = nodeControlsContainer.findViewById(R.id.on_off_state);
+        final SeekBar transitionTimeSeekBar = nodeControlsContainer.findViewById(R.id.transition_seekbar);
+        transitionTimeSeekBar.setProgress(0);
+        transitionTimeSeekBar.incrementProgressBy(1);
+        transitionTimeSeekBar.setMax(230);
+        TransitionTimeSeekBarOnChangeListener seekBarOnChangeListener =
+                new TransitionTimeSeekBarOnChangeListener(time);
+        final SeekBar delaySeekBar = nodeControlsContainer.findViewById(R.id.delay_seekbar);
+        delaySeekBar.setProgress(0);
+        delaySeekBar.incrementProgressBy(5);
+        delaySeekBar.setMax(255);
+
+        mActionRead = nodeControlsContainer.findViewById(R.id.action_read);
+        mActionRead.setOnClickListener(v -> {
+            final ProvisionedMeshNode node = mViewModel.getExtendedMeshNode().getMeshNode();
+            mViewModel.sendSensorGet(node);
+            showProgressbar();
+            mActionRead.setEnabled(false);
+        });
+
+        transitionTimeSeekBar.setOnSeekBarChangeListener(seekBarOnChangeListener);
+
+        mViewModel.getSensorState().observe(this, presentState -> {
+            hideProgressBar();
+            mActionRead.setEnabled(true);
+            sensorStateText.setText(presentState.toString());
+        });
+    }
+
     private void addNodeControlsUi(){
         final MeshModel model = mViewModel.getMeshModel().getValue();
 
         if(model instanceof GenericOnOffServerModel) {
-            addGenericOnOffControls(model);
+            addGenericOnOffControls();
+        } else if(model instanceof SensorServer) {
+            addSensorControls();
         }
     }
 }

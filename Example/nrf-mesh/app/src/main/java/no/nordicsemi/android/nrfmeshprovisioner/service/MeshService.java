@@ -83,6 +83,7 @@ import static no.nordicsemi.android.nrfmeshprovisioner.utils.Utils.ACTION_IS_CON
 import static no.nordicsemi.android.nrfmeshprovisioner.utils.Utils.ACTION_IS_RECONNECTING;
 import static no.nordicsemi.android.nrfmeshprovisioner.utils.Utils.ACTION_ON_DEVICE_READY;
 import static no.nordicsemi.android.nrfmeshprovisioner.utils.Utils.ACTION_PROVISIONING_STATE;
+import static no.nordicsemi.android.nrfmeshprovisioner.utils.Utils.ACTION_SENSOR_STATE;
 import static no.nordicsemi.android.nrfmeshprovisioner.utils.Utils.EXTRA_APP_KEY_INDEX;
 import static no.nordicsemi.android.nrfmeshprovisioner.utils.Utils.EXTRA_CONFIGURATION_STATE;
 import static no.nordicsemi.android.nrfmeshprovisioner.utils.Utils.EXTRA_DATA;
@@ -97,6 +98,7 @@ import static no.nordicsemi.android.nrfmeshprovisioner.utils.Utils.EXTRA_MODEL_I
 import static no.nordicsemi.android.nrfmeshprovisioner.utils.Utils.EXTRA_NET_KEY_INDEX;
 import static no.nordicsemi.android.nrfmeshprovisioner.utils.Utils.EXTRA_PROVISIONING_STATE;
 import static no.nordicsemi.android.nrfmeshprovisioner.utils.Utils.EXTRA_PUBLISH_ADDRESS;
+import static no.nordicsemi.android.nrfmeshprovisioner.utils.Utils.EXTRA_SENSOR_STATE;
 import static no.nordicsemi.android.nrfmeshprovisioner.utils.Utils.EXTRA_STATUS;
 
 public class MeshService extends Service implements BleMeshManagerCallbacks,
@@ -705,6 +707,14 @@ public class MeshService extends Service implements BleMeshManagerCallbacks,
         }
     }
 
+    @Override
+    public void onSensorStatusReceived(ProvisionedMeshNode node, ArrayList<Byte> sensorData) {
+        mMeshNode = node;
+        final Intent intent = new Intent(ACTION_SENSOR_STATE);
+        intent.putExtra(EXTRA_SENSOR_STATE, sensorData);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+    }
+
     private void handleConnectivityStates(final boolean connected) {
         //Check if provisioning is complete
         if (mIsProvisioningComplete) {
@@ -1074,6 +1084,12 @@ public class MeshService extends Service implements BleMeshManagerCallbacks,
 
         public void resetMeshNode(final ProvisionedMeshNode provisionedMeshNode) {
             mMeshManagerApi.resetMeshNode(provisionedMeshNode);
+        }
+
+
+        public void sendSensorGet(final ProvisionedMeshNode node, final MeshModel model, final byte[] address, final int appKeyIndex) {
+
+            mMeshManagerApi.getSensor(node, model, address, appKeyIndex);
         }
     }
 }

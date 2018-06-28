@@ -53,6 +53,7 @@ public class Utils {
     public static final String ACTION_PROVISIONING_STATE = "ACTION_PROVISIONING_STATE";
     public static final String ACTION_CONFIGURATION_STATE = "ACTION_CONFIGURATION_STATE";
     public static final String ACTION_GENERIC_ON_OFF_STATE = "ACTION_GENERIC_ON_OFF_STATE";
+    public static final String ACTION_SENSOR_STATE = "ACTION_SENSOR_STATE";
     public static final String ACTION_UPDATE_PROVISIONED_NODES = "ACTION_UPDATE_PROVISIONED_NODES";
 
     public static final String EXTRA_DATA = "EXTRA_DATA";
@@ -85,6 +86,7 @@ public class Utils {
     public static final String EXTRA_GENERIC_ON_OFF_PRESENT_STATE = "EXTRA_GENERIC_ON_OFF_PRESENT_STATE";
     public static final String EXTRA_GENERIC_ON_OFF_TARGET_STATE = "EXTRA_GENERIC_ON_OFF_TARGET_STATE";
     public static final String EXTRA_GENERIC_ON_OFF_REMAINING_TIME = "EXTRA_GENERIC_ON_OFF_REMAINING_TIME";
+    public static final String EXTRA_SENSOR_STATE = "EXTRA_SENSOR_STATE";
 
     /**
      * Checks whether Bluetooth is enabled.
@@ -222,6 +224,7 @@ public class Utils {
         intentFilter.addAction(ACTION_PROVISIONING_STATE);
         intentFilter.addAction(ACTION_CONFIGURATION_STATE);
         intentFilter.addAction(ACTION_GENERIC_ON_OFF_STATE);
+        intentFilter.addAction(ACTION_SENSOR_STATE);
         return intentFilter;
     }
 

@@ -29,6 +29,8 @@ import android.content.Intent;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.List;
 
 import no.nordicsemi.android.meshprovisioner.configuration.MeshModel;
@@ -41,6 +43,7 @@ import no.nordicsemi.android.nrfmeshprovisioner.livedata.ExtendedMeshNode;
 import no.nordicsemi.android.nrfmeshprovisioner.viewmodels.MeshNodeStates;
 
 import static no.nordicsemi.android.nrfmeshprovisioner.utils.Utils.ACTION_GENERIC_ON_OFF_STATE;
+import static no.nordicsemi.android.nrfmeshprovisioner.utils.Utils.ACTION_SENSOR_STATE;
 import static no.nordicsemi.android.nrfmeshprovisioner.utils.Utils.EXTRA_APP_KEY_INDEX;
 import static no.nordicsemi.android.nrfmeshprovisioner.utils.Utils.EXTRA_CONFIGURATION_STATE;
 import static no.nordicsemi.android.nrfmeshprovisioner.utils.Utils.EXTRA_ELEMENT_ADDRESS;
@@ -48,6 +51,7 @@ import static no.nordicsemi.android.nrfmeshprovisioner.utils.Utils.EXTRA_GENERIC
 import static no.nordicsemi.android.nrfmeshprovisioner.utils.Utils.EXTRA_IS_SUCCESS;
 import static no.nordicsemi.android.nrfmeshprovisioner.utils.Utils.EXTRA_MODEL_ID;
 import static no.nordicsemi.android.nrfmeshprovisioner.utils.Utils.EXTRA_PUBLISH_ADDRESS;
+import static no.nordicsemi.android.nrfmeshprovisioner.utils.Utils.EXTRA_SENSOR_STATE;
 import static no.nordicsemi.android.nrfmeshprovisioner.utils.Utils.EXTRA_STATUS;
 import static no.nordicsemi.android.nrfmeshprovisioner.utils.Utils.EXTRA_SUBSCRIPTION_ADDRESS;
 
@@ -55,6 +59,7 @@ public class ModelConfigurationRepository extends BaseMeshRepository {
 
     private static final String TAG = ModelConfigurationRepository.class.getSimpleName();
     private MutableLiveData<Boolean> mPresentState = new MutableLiveData<>();
+    private MutableLiveData<ArrayList<Byte>> mSensorState = new MutableLiveData<>();
 
     public ModelConfigurationRepository(final Context context) {
         super(context);
@@ -62,6 +67,10 @@ public class ModelConfigurationRepository extends BaseMeshRepository {
 
     public LiveData<Boolean> getGenericOnOffState() {
         return mPresentState;
+    }
+
+    public LiveData<ArrayList<Byte>> getSensorState() {
+        return mSensorState;
     }
 
     public LiveData<Boolean> isConnected() {
@@ -102,6 +111,12 @@ public class ModelConfigurationRepository extends BaseMeshRepository {
     protected void onGenericOnOfStateReceived(final Intent intent) {
         super.onGenericOnOfStateReceived(intent);
         handleGenericOnOffState(intent);
+    }
+
+    @Override
+    protected void onSensorStateReceived(final Intent intent) {
+        super.onSensorStateReceived(intent);
+        handleSensorState(intent);
     }
 
     private void handleConfigurationStates(final Intent intent) {
@@ -193,6 +208,18 @@ public class ModelConfigurationRepository extends BaseMeshRepository {
         }
     }
 
+    private void handleSensorState(final Intent intent) {
+        final String action = intent.getAction();
+        final ProvisionedMeshNode node = mBinder.getMeshNode();
+        final MeshModel model = mBinder.getMeshModel();
+        switch (action) {
+            case ACTION_SENSOR_STATE:
+                final ArrayList<Byte> presentState = (ArrayList<Byte>) intent.getExtras().get(EXTRA_SENSOR_STATE);
+                mSensorState.postValue(presentState);
+                break;
+        }
+    }
+
     @Override
     public void setElement(final Element element) {
         super.setElement(element);
@@ -253,6 +280,26 @@ public class ModelConfigurationRepository extends BaseMeshRepository {
             Log.v(TAG, "Sending message to element's unicast address: " + MeshParserUtils.bytesToHex(address, true));
 
             mBinder.sendGenericOnOffGet(node, model, address, appKeyIndex);
+        } else {
+            Toast.makeText(mContext, R.string.error_no_app_keys_bound, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * Send sensor get to mesh node
+     *
+     * @param node mesh node to send generic on off get
+     */
+    public void sendSensorGet(final ProvisionedMeshNode node) {
+        final Element element = mElement.getValue();
+        final MeshModel model = mMeshModel.getValue();
+
+        if (!model.getBoundAppKeyIndexes().isEmpty()) {
+            final int appKeyIndex = model.getBoundAppKeyIndexes().get(0);
+            final byte[] address = element.getElementAddress();
+            Log.v(TAG, "Sending message to element's unicast address: " + MeshParserUtils.bytesToHex(address, true));
+
+            mBinder.sendSensorGet(node, model, address, appKeyIndex);
         } else {
             Toast.makeText(mContext, R.string.error_no_app_keys_bound, Toast.LENGTH_SHORT).show();
         }

@@ -892,4 +892,20 @@ public class MeshManagerApi implements InternalTransportCallbacks, InternalMeshM
             throw new IllegalArgumentException("Mesh node cannot be null!");
         mMeshConfigurationHandler.resetMeshNode(provisionedMeshNode);
     }
+
+
+    public void getSensor(final ProvisionedMeshNode node, final MeshModel model, final byte[] dstAddress, final int appKeyIndex) {
+
+        if (!model.getBoundAppKeyIndexes().isEmpty()) {
+            if (appKeyIndex >= 0) {
+                if (dstAddress == null)
+                    throw new IllegalArgumentException("Destination address cannot be null!");
+                mMeshConfigurationHandler.getSensor(node, model, dstAddress, false, appKeyIndex);
+            } else {
+                throw new IllegalArgumentException("Invalid app key index!");
+            }
+        } else {
+            throw new IllegalArgumentException("Please bind an app key to this model to control this model!");
+        }
+    }
 }

@@ -44,6 +44,8 @@ import no.nordicsemi.android.meshprovisioner.configuration.GenericOnOffSetUnackn
 import no.nordicsemi.android.meshprovisioner.configuration.GenericOnOffStatus;
 import no.nordicsemi.android.meshprovisioner.configuration.MeshModel;
 import no.nordicsemi.android.meshprovisioner.configuration.ProvisionedMeshNode;
+import no.nordicsemi.android.meshprovisioner.configuration.SensorGet;
+import no.nordicsemi.android.meshprovisioner.configuration.SensorStatus;
 import no.nordicsemi.android.meshprovisioner.opcodes.ConfigMessageOpCodes;
 
 class MeshConfigurationHandler {
@@ -102,6 +104,10 @@ class MeshConfigurationHandler {
             case CONFIG_NODE_RESET:
                 //Switch to config node reset status since we are expecting a status back
                 configMessage = new ConfigNodeResetStatus(mContext, configMessage.getMeshNode(), mInternalTransportCallbacks, mStatusCallbacks);
+                break;
+            case SENSOR_GET:
+                //Switch the state to Generic on off status generic on off set is an acknowledged message.
+                configMessage = new SensorStatus(mContext, configMessage.getMeshNode(), configMessage.getMeshModel(), configMessage.getAppKeyIndex(), mInternalTransportCallbacks, mStatusCallbacks);
                 break;
         }
     }
@@ -163,6 +169,10 @@ class MeshConfigurationHandler {
             case CONFIG_NODE_RESET_STATUS:
                 final ConfigNodeResetStatus configNodeResetStatus = (ConfigNodeResetStatus) configMessage;
                 configNodeResetStatus.parseData(pdu);
+                break;
+            case SENSOR_STATUS:
+                final SensorStatus sensorStatus = (SensorStatus) configMessage;
+                sensorStatus.parseData(pdu);
                 break;
         }
     }
@@ -343,5 +353,13 @@ class MeshConfigurationHandler {
        final ConfigNodeReset configNodeReset = new ConfigNodeReset(mContext, provisionedMeshNode, false, mInternalTransportCallbacks, mStatusCallbacks);
        configNodeReset.executeSend();
        configMessage = configNodeReset;
+    }
+
+    public void getSensor(final ProvisionedMeshNode node, final MeshModel model, final byte[] address, final boolean aszmic, final int appKeyIndex) {
+        final SensorGet sensorGet = new SensorGet(mContext, node, model, aszmic, address, appKeyIndex);
+        sensorGet.setTransportCallbacks(mInternalTransportCallbacks);
+        sensorGet.setConfigurationStatusCallbacks(mStatusCallbacks);
+        sensorGet.executeSend();
+        configMessage = sensorGet;
     }
 }

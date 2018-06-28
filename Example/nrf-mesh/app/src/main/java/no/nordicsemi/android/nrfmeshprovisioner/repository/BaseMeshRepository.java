@@ -57,6 +57,7 @@ import static no.nordicsemi.android.nrfmeshprovisioner.utils.Utils.ACTION_IS_CON
 import static no.nordicsemi.android.nrfmeshprovisioner.utils.Utils.ACTION_IS_RECONNECTING;
 import static no.nordicsemi.android.nrfmeshprovisioner.utils.Utils.ACTION_ON_DEVICE_READY;
 import static no.nordicsemi.android.nrfmeshprovisioner.utils.Utils.ACTION_PROVISIONING_STATE;
+import static no.nordicsemi.android.nrfmeshprovisioner.utils.Utils.ACTION_SENSOR_STATE;
 import static no.nordicsemi.android.nrfmeshprovisioner.utils.Utils.EXTRA_DATA;
 
 public abstract class BaseMeshRepository {
@@ -167,6 +168,9 @@ public abstract class BaseMeshRepository {
                 case ACTION_GENERIC_ON_OFF_STATE:
                     onGenericOnOfStateReceived(intent);
                     break;
+                case ACTION_SENSOR_STATE:
+                    onSensorStateReceived(intent);
+                    break;
             }
         }
     };
@@ -199,6 +203,10 @@ public abstract class BaseMeshRepository {
     public abstract void onConfigurationStateChanged(final Intent intent);
 
     protected void onGenericOnOfStateReceived(final Intent intent){
+
+    }
+
+    protected void onSensorStateReceived(final Intent intent){
 
     }
 

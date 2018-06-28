@@ -22,6 +22,8 @@
 
 package no.nordicsemi.android.meshprovisioner;
 
+import java.util.ArrayList;
+
 import no.nordicsemi.android.meshprovisioner.configuration.ProvisionedMeshNode;
 
 public interface MeshConfigurationStatusCallbacks {
@@ -56,4 +58,6 @@ public interface MeshConfigurationStatusCallbacks {
     void onMeshNodeResetSent(final ProvisionedMeshNode node);
 
     void onMeshNodeResetStatusReceived(final ProvisionedMeshNode node);
+
+    void onSensorStatusReceived(final ProvisionedMeshNode node, final ArrayList<Byte> sensorData);
 }

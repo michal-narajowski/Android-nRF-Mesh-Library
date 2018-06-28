@@ -25,6 +25,8 @@ package no.nordicsemi.android.nrfmeshprovisioner.viewmodels;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.ViewModel;
 
+import java.util.ArrayList;
+
 import javax.inject.Inject;
 
 import no.nordicsemi.android.meshprovisioner.configuration.MeshModel;
@@ -134,5 +136,18 @@ public class ModelConfigurationViewModel extends ViewModel {
 
     public LiveData<Boolean> getGenericOnOffState() {
         return mModelConfigurationRepository.getGenericOnOffState();
+    }
+
+    /**
+     * Send generic on off get to mesh node
+     *
+     * @param node mesh node to send generic on off get
+     */
+    public void sendSensorGet(final ProvisionedMeshNode node) {
+        mModelConfigurationRepository.sendSensorGet(node);
+    }
+
+    public LiveData<ArrayList<Byte>> getSensorState() {
+        return mModelConfigurationRepository.getSensorState();
     }
 }

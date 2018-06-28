@@ -112,7 +112,9 @@ public abstract class ConfigMessage implements LowerTransportLayerCallbacks {
         GENERIC_ON_OFF_GET(ApplicationMessageOpCodes.GENERIC_ON_OFF_GET),
         GENERIC_ON_OFF_SET(ApplicationMessageOpCodes.GENERIC_ON_OFF_SET),
         GENERIC_ON_OFF_SET_UNACKNOWLEDGED(ApplicationMessageOpCodes.GENERIC_ON_OFF_SET_UNACKNOWLEDGED),
-        GENERIC_ON_OFF_STATUS(ApplicationMessageOpCodes.GENERIC_ON_OFF_STATUS);
+        GENERIC_ON_OFF_STATUS(ApplicationMessageOpCodes.GENERIC_ON_OFF_STATUS),
+        SENSOR_GET(ApplicationMessageOpCodes.SENSOR_GET),
+        SENSOR_STATUS(ApplicationMessageOpCodes.SENSOR_STATUS);
 
         private int state;
 
