@@ -38,6 +38,7 @@ import no.nordicsemi.android.meshprovisioner.configuration.ProvisionedMeshNode;
 import no.nordicsemi.android.meshprovisioner.utils.CompositionDataParser;
 import no.nordicsemi.android.meshprovisioner.utils.Element;
 import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils;
+import no.nordicsemi.android.meshprovisioner.utils.SensorData;
 import no.nordicsemi.android.nrfmeshprovisioner.R;
 import no.nordicsemi.android.nrfmeshprovisioner.livedata.ExtendedMeshNode;
 import no.nordicsemi.android.nrfmeshprovisioner.viewmodels.MeshNodeStates;
@@ -59,7 +60,7 @@ public class ModelConfigurationRepository extends BaseMeshRepository {
 
     private static final String TAG = ModelConfigurationRepository.class.getSimpleName();
     private MutableLiveData<Boolean> mPresentState = new MutableLiveData<>();
-    private MutableLiveData<ArrayList<Byte>> mSensorState = new MutableLiveData<>();
+    private MutableLiveData<SensorData> mSensorState = new MutableLiveData<>();
 
     public ModelConfigurationRepository(final Context context) {
         super(context);
@@ -69,7 +70,7 @@ public class ModelConfigurationRepository extends BaseMeshRepository {
         return mPresentState;
     }
 
-    public LiveData<ArrayList<Byte>> getSensorState() {
+    public LiveData<SensorData> getSensorState() {
         return mSensorState;
     }
 
@@ -214,7 +215,7 @@ public class ModelConfigurationRepository extends BaseMeshRepository {
         final MeshModel model = mBinder.getMeshModel();
         switch (action) {
             case ACTION_SENSOR_STATE:
-                final ArrayList<Byte> presentState = (ArrayList<Byte>) intent.getExtras().get(EXTRA_SENSOR_STATE);
+                final SensorData presentState = intent.getParcelableExtra(EXTRA_SENSOR_STATE);
                 mSensorState.postValue(presentState);
                 break;
         }

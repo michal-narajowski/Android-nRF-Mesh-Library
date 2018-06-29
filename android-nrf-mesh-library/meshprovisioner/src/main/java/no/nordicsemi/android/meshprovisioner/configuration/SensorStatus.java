@@ -39,6 +39,7 @@ import no.nordicsemi.android.meshprovisioner.messages.Message;
 import no.nordicsemi.android.meshprovisioner.opcodes.ApplicationMessageOpCodes;
 import no.nordicsemi.android.meshprovisioner.transport.UpperTransportLayerCallbacks;
 import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils;
+import no.nordicsemi.android.meshprovisioner.utils.SensorData;
 
 public final class SensorStatus extends ConfigMessage implements UpperTransportLayerCallbacks{
 
@@ -72,9 +73,6 @@ public final class SensorStatus extends ConfigMessage implements UpperTransportL
         if (message != null) {
             if (message instanceof AccessMessage) {
                 final AccessMessage accessMessage = (AccessMessage) message;
-//                final byte[] accessPayload = accessMessage.getAccessPdu();
-//                final int opCodeLength = ((accessPayload[0] >> 7) & 0x01) + 1;
-                ArrayList<Byte> sensorData = new ArrayList<>();
 
                 final short opcode = (short)accessMessage.getOpCode();
 
@@ -85,6 +83,7 @@ public final class SensorStatus extends ConfigMessage implements UpperTransportL
 
                 Log.v(TAG, "Received sensor status");
                 final ByteBuffer buffer = ByteBuffer.wrap(accessMessage.getParameters()).order(ByteOrder.LITTLE_ENDIAN);
+                SensorData sensorData = new SensorData(buffer);
 
                 mConfigStatusCallbacks.onSensorStatusReceived(mProvisionedMeshNode, sensorData);
                 mInternalTransportCallbacks.updateMeshNode(mProvisionedMeshNode);

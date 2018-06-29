@@ -44,6 +44,7 @@ import android.widget.Toast;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -414,7 +415,8 @@ public class ModelConfigurationActivity extends AppCompatActivity implements Inj
         mViewModel.getSensorState().observe(this, presentState -> {
             hideProgressBar();
             mActionRead.setEnabled(true);
-            sensorStateText.setText(presentState.toString());
+            assert presentState != null;
+            sensorStateText.setText(Arrays.toString(presentState.propertyData.get(0).data));
         });
     }
 

@@ -31,6 +31,7 @@ import javax.inject.Inject;
 
 import no.nordicsemi.android.meshprovisioner.configuration.MeshModel;
 import no.nordicsemi.android.meshprovisioner.configuration.ProvisionedMeshNode;
+import no.nordicsemi.android.meshprovisioner.utils.SensorData;
 import no.nordicsemi.android.nrfmeshprovisioner.livedata.AppKeyBindStatusLiveData;
 import no.nordicsemi.android.nrfmeshprovisioner.livedata.ConfigModelPublicationStatusLiveData;
 import no.nordicsemi.android.nrfmeshprovisioner.livedata.ConfigModelSubscriptionStatusLiveData;
@@ -147,7 +148,7 @@ public class ModelConfigurationViewModel extends ViewModel {
         mModelConfigurationRepository.sendSensorGet(node);
     }
 
-    public LiveData<ArrayList<Byte>> getSensorState() {
+    public LiveData<SensorData> getSensorState() {
         return mModelConfigurationRepository.getSensorState();
     }
 }
