@@ -43,9 +43,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.Serializable;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 import javax.inject.Inject;
 
@@ -416,7 +419,21 @@ public class ModelConfigurationActivity extends AppCompatActivity implements Inj
             hideProgressBar();
             mActionRead.setEnabled(true);
             assert presentState != null;
-            sensorStateText.setText(Arrays.toString(presentState.propertyData.get(0).data));
+            if (presentState.propertyData.isEmpty()) {
+                sensorStateText.setText("No data");
+                return;
+            }
+
+            for (int i = 0; i < presentState.propertyData.size(); ++i) {
+                if (presentState.propertyData.get(i).propertyID == 0x0001) {
+                    byte[] bytes = presentState.propertyData.get(i).data;
+
+                    float f = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getFloat();
+                    final String DEGREE_CELSIUS  = "\u2103";
+                    sensorStateText.setText(String.format(Locale.ENGLISH,
+                            "%.1f %s", f, DEGREE_CELSIUS));
+                }
+            }
         });
     }
 

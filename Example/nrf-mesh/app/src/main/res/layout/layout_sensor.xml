@@ -133,7 +133,7 @@
         android:layout_marginEnd="@dimen/activity_horizontal_margin"
         android:paddingTop="@dimen/activity_vertical_margin"
         android:paddingBottom="@dimen/activity_vertical_margin"
-        android:text="Sensor state"
+        android:text="Temperature sensor"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@id/on_off_state"
         app:layout_constraintTop_toBottomOf="@id/node_controls_tool_bar"
