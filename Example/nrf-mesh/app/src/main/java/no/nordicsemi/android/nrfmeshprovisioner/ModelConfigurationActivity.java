@@ -447,6 +447,15 @@ public class ModelConfigurationActivity extends AppCompatActivity implements Inj
                     sensorStateBuilder.append(String.format(Locale.ENGLISH,
                             "%.1f hPa\n", f / 100));
                 }
+
+                if (presentState.propertyData.get(i).propertyID == 0x0003) {
+                    byte[] bytes = presentState.propertyData.get(i).data;
+
+                    float f = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getFloat();
+                    sensorTitleBuilder.append("Humidity sensor\n");
+                    sensorStateBuilder.append(String.format(Locale.ENGLISH,
+                            "%.1f %%rH\n", f));
+                }
             }
 
             sensorTitleText.setText(sensorTitleBuilder.toString());
