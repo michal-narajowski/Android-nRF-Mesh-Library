@@ -393,6 +393,7 @@ public class ModelConfigurationActivity extends AppCompatActivity implements Inj
         final View nodeControlsContainer = LayoutInflater.from(this).inflate(R.layout.layout_sensor, cardView);
 
         final TextView time = nodeControlsContainer.findViewById(R.id.transition_time);
+        final TextView sensorTitleText = nodeControlsContainer.findViewById(R.id.state);
         final TextView sensorStateText = nodeControlsContainer.findViewById(R.id.on_off_state);
         final SeekBar transitionTimeSeekBar = nodeControlsContainer.findViewById(R.id.transition_seekbar);
         transitionTimeSeekBar.setProgress(0);
@@ -424,16 +425,32 @@ public class ModelConfigurationActivity extends AppCompatActivity implements Inj
                 return;
             }
 
+            StringBuilder sensorTitleBuilder = new StringBuilder();
+            StringBuilder sensorStateBuilder = new StringBuilder();
+
             for (int i = 0; i < presentState.propertyData.size(); ++i) {
                 if (presentState.propertyData.get(i).propertyID == 0x0001) {
                     byte[] bytes = presentState.propertyData.get(i).data;
 
                     float f = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getFloat();
                     final String DEGREE_CELSIUS  = "\u2103";
-                    sensorStateText.setText(String.format(Locale.ENGLISH,
-                            "%.1f %s", f, DEGREE_CELSIUS));
+                    sensorTitleBuilder.append("Temperature sensor\n");
+                    sensorStateBuilder.append(String.format(Locale.ENGLISH,
+                            "%.1f %s\n", f, DEGREE_CELSIUS));
+                }
+
+                if (presentState.propertyData.get(i).propertyID == 0x0002) {
+                    byte[] bytes = presentState.propertyData.get(i).data;
+
+                    float f = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getFloat();
+                    sensorTitleBuilder.append("Pressure sensor\n");
+                    sensorStateBuilder.append(String.format(Locale.ENGLISH,
+                            "%.1f hPa\n", f / 100));
                 }
             }
+
+            sensorTitleText.setText(sensorTitleBuilder.toString());
+            sensorStateText.setText(sensorStateBuilder.toString());
         });
     }
 
