@@ -21,7 +21,7 @@
   -->
 
 <resources>
-    <string name="app_name">nRF Mesh</string>
+    <string name="app_name">nRF Toolbox</string>
     <string name="feature_name">Mesh Provisioner</string>
 
     <string name="title">@string/app_name</string>
