@@ -83,7 +83,7 @@ public final class SensorStatus extends ConfigMessage implements UpperTransportL
 
                 Log.v(TAG, "Received sensor status");
                 final ByteBuffer buffer = ByteBuffer.wrap(accessMessage.getParameters()).order(ByteOrder.LITTLE_ENDIAN);
-                SensorData sensorData = new SensorData(buffer);
+                SensorData sensorData = new SensorData(message.getSrc(), buffer);
 
                 mConfigStatusCallbacks.onSensorStatusReceived(mProvisionedMeshNode, sensorData);
                 mInternalTransportCallbacks.updateMeshNode(mProvisionedMeshNode);

@@ -48,8 +48,10 @@ public class SensorData implements Parcelable {
     }
 
     public ArrayList<SensorPropertyData> propertyData;
+    public byte[] src;
 
-    public SensorData(ByteBuffer buffer) {
+    public SensorData(byte[] src, ByteBuffer buffer) {
+        this.src = src;
         propertyData = new ArrayList<>();
 
         while(buffer.position() < buffer.limit()) {
