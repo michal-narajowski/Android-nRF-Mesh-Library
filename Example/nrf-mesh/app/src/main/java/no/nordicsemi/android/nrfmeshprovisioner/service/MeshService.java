@@ -995,7 +995,7 @@ public class MeshService extends Service implements BleMeshManagerCallbacks,
 
         public void sendConfigModelPublishAddressSet(final ProvisionedMeshNode node, final Element element, final MeshModel meshModel, final int appKeyIndex, final byte[] publishAddress) {
             mMeshManagerApi.setConfigModelPublishAddress(node,
-                    element.getElementAddress(), publishAddress, appKeyIndex, meshModel.getModelId(), 0, 0xFF, 0, 0, 0);
+                    element.getElementAddress(), publishAddress, appKeyIndex, meshModel.getModelId(), 0, 0xFF, 0x5e, 0, 0);
         }
 
         public void sendConfigModelSubscriptionAdd(final ProvisionedMeshNode node, final Element element, final MeshModel meshModel, final byte[] subsciptionAddress) {
