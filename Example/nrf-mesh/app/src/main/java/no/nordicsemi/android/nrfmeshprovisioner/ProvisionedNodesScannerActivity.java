@@ -60,9 +60,6 @@ public class ProvisionedNodesScannerActivity extends AppCompatActivity implement
 	public static final String SELECTED_NODE = "SELECTED_NODE";
 	public static final String NETWORK_ID = "NETWORK_ID";
 
-	@Inject
-	ViewModelProvider.Factory mViewModelFactory;
-
 	@BindView(R.id.state_scanning) View mScanningView;
 	@BindView(R.id.no_devices)View mEmptyView;
 	@BindView(R.id.no_location_permission) View mNoLocationPermissionView;
@@ -71,8 +68,6 @@ public class ProvisionedNodesScannerActivity extends AppCompatActivity implement
 	@BindView(R.id.no_location)	View mNoLocationView;
 	@BindView(R.id.bluetooth_off) View mNoBluetoothView;
 
-	private ProvisionedNodesScannerViewModel mViewModel;
-	private String mNetworkId;
 
 	@Override
 	protected void onCreate(@Nullable final Bundle savedInstanceState) {
@@ -81,33 +76,17 @@ public class ProvisionedNodesScannerActivity extends AppCompatActivity implement
 		ButterKnife.bind(this);
 
 		final Intent intent = getIntent();
-		mNetworkId = intent.getStringExtra(NETWORK_ID);
 
 		final Toolbar toolbar = findViewById(R.id.toolbar);
 		setSupportActionBar(toolbar);
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 		getSupportActionBar().setTitle(R.string.app_name);
 
-		// Create view model containing utility methods for scanning
-		mViewModel = ViewModelProviders.of(this, mViewModelFactory).get(ProvisionedNodesScannerViewModel.class);
-		mViewModel.getScannerState().startScanning();
-		mViewModel.getScannerState().observe(this, this::startScan);
-
 		// Configure the recycler view
 		final RecyclerView recyclerViewDevices = findViewById(R.id.recycler_view_ble_devices);
 		recyclerViewDevices.setLayoutManager(new LinearLayoutManager(this));
 		final DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(recyclerViewDevices.getContext(), DividerItemDecoration.VERTICAL);
 		recyclerViewDevices.addItemDecoration(dividerItemDecoration);
-		final DevicesAdapter adapter = new DevicesAdapter(this, mViewModel.getScannerState());
-		adapter.setOnItemClickListener(this);
-		recyclerViewDevices.setAdapter(adapter);
-
-		mViewModel.isDeviceReady().observe(this, isDeviceReady -> {
-			if(isDeviceReady){
-				finish();
-			}
-		});
-
 	}
 
 	@Override
@@ -152,7 +131,6 @@ public class ProvisionedNodesScannerActivity extends AppCompatActivity implement
 		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 		switch (requestCode) {
 			case REQUEST_ACCESS_COARSE_LOCATION:
-				mViewModel.refresh();
 				break;
 		}
 	}
@@ -196,7 +174,6 @@ public class ProvisionedNodesScannerActivity extends AppCompatActivity implement
 				mNoBluetoothView.setVisibility(View.GONE);
 
 				// We are now OK to start scanning
-				mViewModel.startScan(mNetworkId);
 				mScanningView.setVisibility(View.VISIBLE);
 
 				if (state.isEmpty()) {
@@ -231,7 +208,5 @@ public class ProvisionedNodesScannerActivity extends AppCompatActivity implement
 	/**
 	 * stop scanning for bluetooth devices.
 	 */
-	private void stopScan() {
-		mViewModel.stopScan();
-	}
+	private void stopScan() { }
 }

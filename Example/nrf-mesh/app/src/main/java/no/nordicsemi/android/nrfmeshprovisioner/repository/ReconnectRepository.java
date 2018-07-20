@@ -148,4 +148,9 @@ public class ReconnectRepository {
             mBinder.disconnect();
         }
     }
+
+    public void unbindServiceConnection(Context context) {
+        context.unbindService(mServiceConnection);
+    }
+
 }

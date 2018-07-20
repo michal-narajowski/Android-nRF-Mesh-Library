@@ -24,8 +24,12 @@ package no.nordicsemi.android.nrfmeshprovisioner;
 
 import android.arch.lifecycle.ViewModelProvider;
 import android.arch.lifecycle.ViewModelProviders;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.BottomNavigationView;
@@ -37,8 +41,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-
-import java.util.Map;
+import android.widget.Toast;
 
 import javax.inject.Inject;
 
@@ -47,9 +50,9 @@ import butterknife.ButterKnife;
 import dagger.android.AndroidInjector;
 import dagger.android.DispatchingAndroidInjector;
 import dagger.android.support.HasSupportFragmentInjector;
-import no.nordicsemi.android.meshprovisioner.configuration.ProvisionedMeshNode;
 import no.nordicsemi.android.nrfmeshprovisioner.di.Injectable;
 import no.nordicsemi.android.nrfmeshprovisioner.dialog.DialogFragmentResetNetwork;
+import no.nordicsemi.android.nrfmeshprovisioner.service.ReconnectService;
 import no.nordicsemi.android.nrfmeshprovisioner.utils.Utils;
 import no.nordicsemi.android.nrfmeshprovisioner.viewmodels.SharedViewModel;
 
@@ -108,6 +111,15 @@ public class MainActivity extends AppCompatActivity implements Injectable, HasSu
             }
         });
 
+        mViewModel.getProvisionedNodesLiveData().observe(this, provisionedNodesLiveData -> {
+            assert provisionedNodesLiveData != null;
+            if (provisionedNodesLiveData.getProvisionedNodes().isEmpty()) {
+                ReconnectService.stopReconnect(this);
+            } else {
+                ReconnectService.startReconnect(this, mViewModel.getNetworkId());
+            }
+        });
+
         if(savedInstanceState == null) {
             onNavigationItemSelected(mBottomNavigationView.getMenu().findItem(R.id.action_network));
         } else {
@@ -140,9 +152,10 @@ public class MainActivity extends AppCompatActivity implements Injectable, HasSu
         final int id = item.getItemId();
         switch (id) {
             case R.id.action_connect:
-                final Intent scannerActivity = new Intent(this, ProvisionedNodesScannerActivity.class);
-                scannerActivity.putExtra(ProvisionedNodesScannerActivity.NETWORK_ID, mViewModel.getNetworkId());
-                startActivity(scannerActivity);
+//                final Intent scannerActivity = new Intent(this, ProvisionedNodesScannerActivity.class);
+//                scannerActivity.putExtra(ProvisionedNodesScannerActivity.NETWORK_ID, mViewModel.getNetworkId());
+//                startActivity(scannerActivity);
+                ReconnectService.startReconnect(this, mViewModel.getNetworkId());
                 return true;
             case R.id.action_disconnect:
                 mViewModel.disconnect();
@@ -150,7 +163,7 @@ public class MainActivity extends AppCompatActivity implements Injectable, HasSu
             case R.id.action_reset_network:
                 final DialogFragmentResetNetwork dialogFragmentResetNetwork = DialogFragmentResetNetwork.
                         newInstance(getString(R.string.title_reset_network), getString(R.string.message_reset_network));
-                        dialogFragmentResetNetwork.show(getSupportFragmentManager(), null);
+                dialogFragmentResetNetwork.show(getSupportFragmentManager(), null);
                 return true;
         }
         return false;

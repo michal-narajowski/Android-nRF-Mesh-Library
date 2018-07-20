@@ -101,6 +101,10 @@
             android:name=".service.MeshService"
             android:exported="false">
         </service>
+        <service
+            android:name=".service.ReconnectService"
+            android:exported="false">
+        </service>
     </application>
 
 </manifest>

@@ -34,9 +34,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
 import no.nordicsemi.android.meshprovisioner.configuration.ProvisionedMeshNode;
 import no.nordicsemi.android.nrfmeshprovisioner.ble.BleMeshManager;
 import no.nordicsemi.android.nrfmeshprovisioner.livedata.ScannerLiveData;
@@ -50,7 +47,6 @@ import no.nordicsemi.android.support.v18.scanner.ScanSettings;
 
 import static no.nordicsemi.android.nrfmeshprovisioner.ble.BleMeshManager.MESH_PROXY_UUID;
 
-@Singleton
 public class ProvisionedNodesScannerRepository extends BaseMeshRepository {
 
     private final Context mContext;
@@ -95,7 +91,6 @@ public class ProvisionedNodesScannerRepository extends BaseMeshRepository {
         }
     };
 
-    @Inject
     public ProvisionedNodesScannerRepository(final Context context) {
         super(context);
         this.mContext = context;
