@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+import android.util.Log;
 import android.widget.Toast;
 
 
@@ -18,6 +19,8 @@ import no.nordicsemi.android.nrfmeshprovisioner.repository.ProvisionedNodesScann
 import no.nordicsemi.android.nrfmeshprovisioner.repository.ReconnectRepository;
 
 public class ReconnectService extends LifecycleService {
+    private static final String TAG = ReconnectService.class.getSimpleName();
+
     private static final String ACTION_RECONNECT_START = "no.nordicsemi.android.nrfmeshprovisioner.service.action.RECONNECT_START";
     private static final String ACTION_RECONNECT_STOP = "no.nordicsemi.android.nrfmeshprovisioner.service.action.RECONNECT_STOP";
 
@@ -25,7 +28,7 @@ public class ReconnectService extends LifecycleService {
 
     private ProvisionedNodesScannerRepository scannerRepository;
     private ReconnectRepository reconnectRepository;
-    private boolean isRunning;
+    private boolean isRunning = false;
 
 
     public static void startReconnect(Context context, String networkID) {
@@ -45,6 +48,7 @@ public class ReconnectService extends LifecycleService {
     public void onCreate() {
         scannerRepository = new ProvisionedNodesScannerRepository(this);
         reconnectRepository = new ReconnectRepository(this);
+        isRunning = false;
         super.onCreate();
     }
 
@@ -70,11 +74,11 @@ public class ReconnectService extends LifecycleService {
             handleStopReconnect();
             scannerRepository.unbindService();
             reconnectRepository.unbindServiceConnection(this);
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+//            try {
+//                Thread.sleep(1000);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
             super.onDestroy();
         }
     }
@@ -92,12 +96,14 @@ public class ReconnectService extends LifecycleService {
     public void handleStartReconnect(String networkID) {
         Toast.makeText(this, "Reconnect start",
                 Toast.LENGTH_LONG).show();
+        Log.println(Log.DEBUG, TAG, String.format("Reconnect start"));
         scannerRepository.startScanning(networkID);
         scannerRepository.getScannerState().observeForever(scannerObserver);
     }
 
     public void handleStopReconnect() {
         Toast.makeText(this, "Reconnect stop", Toast.LENGTH_SHORT).show();
+        Log.println(Log.DEBUG, TAG, String.format("Reconnect stop"));
         scannerRepository.stopScanning();
         scannerRepository.getScannerState().removeObserver(scannerObserver);
     }

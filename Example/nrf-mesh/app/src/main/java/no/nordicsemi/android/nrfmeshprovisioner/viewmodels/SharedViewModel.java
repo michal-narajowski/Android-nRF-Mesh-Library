@@ -22,9 +22,12 @@
 
 package no.nordicsemi.android.nrfmeshprovisioner.viewmodels;
 
+import android.arch.lifecycle.LifecycleOwner;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.ViewModel;
+import android.content.Context;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javax.inject.Inject;
@@ -36,6 +39,37 @@ import no.nordicsemi.android.nrfmeshprovisioner.repository.MeshRepository;
 import no.nordicsemi.android.nrfmeshprovisioner.repository.ScannerRepository;
 
 public class SharedViewModel extends ViewModel {
+
+    public static class ReconnectLiveData extends LiveData<ReconnectLiveData> {
+        MeshRepository meshRepository;
+
+        public Boolean isProvisioning;
+        public Boolean isConnected;
+        public Boolean provisionedNodesIsEmpty;
+
+        public ReconnectLiveData(LifecycleOwner owner,
+                                 MeshRepository meshRepository)
+        {
+            this.meshRepository = meshRepository;
+
+            meshRepository.isProvisioning().observe(owner, isProvisioning -> {
+                this.isProvisioning = isProvisioning;
+                postValue(this);
+            });
+
+            meshRepository.isConnected().observe(owner, isConnected -> {
+                this.isConnected = isConnected;
+                postValue(this);
+            });
+
+            meshRepository.getProvisionedNodesLiveData().observe(owner, provisionedNodes -> {
+                this.provisionedNodesIsEmpty = provisionedNodes.getProvisionedNodes().isEmpty();
+                postValue(this);
+            });
+        }
+
+    }
+
 
     private final ScannerRepository mScannerRepository;
     private final MeshRepository mMeshRepository;
@@ -82,6 +116,10 @@ public class SharedViewModel extends ViewModel {
 
     public LiveData<Boolean> isConnected() {
         return mMeshRepository.isConnected();
+    }
+
+    public LiveData<Boolean> isProvisioning() {
+        return mMeshRepository.isProvisioning();
     }
 
     public void disconnect() {

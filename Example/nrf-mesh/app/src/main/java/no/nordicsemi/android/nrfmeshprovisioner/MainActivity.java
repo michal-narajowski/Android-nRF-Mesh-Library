@@ -22,6 +22,7 @@
 
 package no.nordicsemi.android.nrfmeshprovisioner;
 
+import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProvider;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.ComponentName;
@@ -38,6 +39,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -81,6 +83,9 @@ public class MainActivity extends AppCompatActivity implements Injectable, HasSu
     private ScannerFragment mScannerFragment;
     private Fragment mSettingsFragment;
 
+    SharedViewModel.ReconnectLiveData reconnectLiveData;
+    Observer<SharedViewModel.ReconnectLiveData> reconnectLiveDataObserver;
+
     @Override
     protected void onCreate(@Nullable final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -101,6 +106,8 @@ public class MainActivity extends AppCompatActivity implements Injectable, HasSu
         mBottomNavigationView.setOnNavigationItemSelectedListener(this);
         mBottomNavigationView.setOnNavigationItemReselectedListener(this);
 
+        reconnectLiveData = new SharedViewModel.ReconnectLiveData(this, mViewModel.getMeshRepository());
+
         mViewModel.getProvisionedNodesLiveData().observe(this, provisionedNodesLiveData -> {
             invalidateOptionsMenu();
         });
@@ -111,20 +118,53 @@ public class MainActivity extends AppCompatActivity implements Injectable, HasSu
             }
         });
 
-        mViewModel.getProvisionedNodesLiveData().observe(this, provisionedNodesLiveData -> {
-            assert provisionedNodesLiveData != null;
-            if (provisionedNodesLiveData.getProvisionedNodes().isEmpty()) {
-                ReconnectService.stopReconnect(this);
+        reconnectLiveDataObserver = reconnectData -> {
+            boolean isConnected = reconnectData.isConnected == null ?
+                    false : reconnectData.isConnected;
+            boolean isEmpty = reconnectData.provisionedNodesIsEmpty == null ?
+                    false : reconnectData.provisionedNodesIsEmpty;
+
+            Log.println(Log.WARN, "ReconnectData",
+                    String.format("isConnected %b isEmpty %b",
+                            isConnected, isEmpty));
+
+            if (!isEmpty && !isConnected) {
+                ReconnectService.startReconnect(MainActivity.this, mViewModel.getNetworkId());
             } else {
-                ReconnectService.startReconnect(this, mViewModel.getNetworkId());
+                ReconnectService.stopReconnect(MainActivity.this);
             }
-        });
+        };
+
+//        mViewModel.isConnected().observe(this, isConnected -> {
+//        });
+
+//        mViewModel.getProvisionedNodesLiveData().observe(this, provisionedNodesLiveData -> {
+//            assert provisionedNodesLiveData != null;
+//            if (provisionedNodesLiveData.getProvisionedNodes().isEmpty()) {
+//                ReconnectService.stopReconnect(this);
+//            } else {
+//                ReconnectService.startReconnect(this, mViewModel.getNetworkId());
+//            }
+//        });
 
         if(savedInstanceState == null) {
             onNavigationItemSelected(mBottomNavigationView.getMenu().findItem(R.id.action_network));
         } else {
             mBottomNavigationView.setSelectedItemId(savedInstanceState.getInt(CURRENT_FRAGMENT));
         }
+    }
+
+    @Override
+    protected void onResume() {
+        reconnectLiveData.observe(this, reconnectLiveDataObserver);
+        super.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        ReconnectService.stopReconnect(this);
+        reconnectLiveData.removeObserver(reconnectLiveDataObserver);
+        super.onPause();
     }
 
     @Override

@@ -82,6 +82,9 @@ public abstract class BaseMeshRepository {
     /** Flag to determine if a reconnection is in the progress when provisioning has completed **/
     final MutableLiveData<byte[]> mConfigurationSrc = new MutableLiveData<>();
 
+    /** Flag to determine if provisioning is in the progress **/
+    final MutableLiveData<Boolean> mIsProvisioning = new MutableLiveData<>();
+
     /** Flag to determine if provisioning was completed **/
     boolean mIsProvisioningComplete = false;
 
