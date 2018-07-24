@@ -61,6 +61,7 @@ import no.nordicsemi.android.meshprovisioner.models.GenericOnOffServerModel;
 import no.nordicsemi.android.meshprovisioner.models.SensorServer;
 import no.nordicsemi.android.meshprovisioner.utils.Element;
 import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils;
+import no.nordicsemi.android.meshprovisioner.utils.SensorData;
 import no.nordicsemi.android.nrfmeshprovisioner.adapter.AddressAdapter;
 import no.nordicsemi.android.nrfmeshprovisioner.di.Injectable;
 import no.nordicsemi.android.nrfmeshprovisioner.dialog.DialogFragmentConfigurationStatus;
@@ -427,53 +428,61 @@ public class ModelConfigurationActivity extends AppCompatActivity implements Inj
 
         transitionTimeSeekBar.setOnSeekBarChangeListener(seekBarOnChangeListener);
 
-        mViewModel.getSensorState().observe(this, presentState -> {
+        mViewModel.getSensorState().observe(this, sensorDataMap -> {
             hideProgressBar();
             mActionRead.setEnabled(true);
-            assert presentState != null;
-            if (presentState.propertyData.isEmpty()) {
-                sensorStateText.setText("No data");
-                return;
-            }
+            assert sensorDataMap != null;
 
             StringBuilder sensorTitleBuilder = new StringBuilder();
             StringBuilder sensorStateBuilder = new StringBuilder();
 
-            byte[] bytesSrc = presentState.src;
+            for (Integer src : sensorDataMap.keySet()) {
+                SensorData presentState = sensorDataMap.get(src);
 
-            ByteBuffer b = ByteBuffer.wrap(bytesSrc).order(ByteOrder.LITTLE_ENDIAN);
-            sensorTitleBuilder.append("Node address\n");
-            sensorStateBuilder.append(String.format(Locale.ENGLISH,
-                    "0x%s\n", bytesToHex(b.array())));
+//                if (presentState.propertyData.isEmpty()) {
+//                    sensorStateText.setText("No data");
+//                    return;
+//                }
+                byte[] bytesSrc = presentState.src;
 
-            for (int i = 0; i < presentState.propertyData.size(); ++i) {
-                if (presentState.propertyData.get(i).propertyID == 0x0001) {
-                    byte[] bytes = presentState.propertyData.get(i).data;
+                ByteBuffer b = ByteBuffer.wrap(bytesSrc).order(ByteOrder.LITTLE_ENDIAN);
+                sensorTitleBuilder.append("Node address\n");
+                sensorStateBuilder.append(String.format(Locale.ENGLISH,
+                        "0x%s\n", bytesToHex(b.array())));
 
-                    float f = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getFloat();
-                    final String DEGREE_CELSIUS  = "\u2103";
-                    sensorTitleBuilder.append("Temperature sensor\n");
-                    sensorStateBuilder.append(String.format(Locale.ENGLISH,
-                            "%.1f %s\n", f, DEGREE_CELSIUS));
+                for (int i = 0; i < presentState.propertyData.size(); ++i) {
+                    if (presentState.propertyData.get(i).propertyID == 0x0001) {
+                        byte[] bytes = presentState.propertyData.get(i).data;
+
+                        float f = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getFloat();
+                        final String DEGREE_CELSIUS  = "\u2103";
+                        sensorTitleBuilder.append("Temperature sensor\n");
+                        sensorStateBuilder.append(String.format(Locale.ENGLISH,
+                                "%.1f %s\n", f, DEGREE_CELSIUS));
+                    }
+
+                    if (presentState.propertyData.get(i).propertyID == 0x0002) {
+                        byte[] bytes = presentState.propertyData.get(i).data;
+
+                        float f = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getFloat();
+                        sensorTitleBuilder.append("Pressure sensor\n");
+                        sensorStateBuilder.append(String.format(Locale.ENGLISH,
+                                "%.1f hPa\n", f / 100));
+                    }
+
+                    if (presentState.propertyData.get(i).propertyID == 0x0003) {
+                        byte[] bytes = presentState.propertyData.get(i).data;
+
+                        float f = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getFloat();
+                        sensorTitleBuilder.append("Humidity sensor\n");
+                        sensorStateBuilder.append(String.format(Locale.ENGLISH,
+                                "%.1f %%rH\n", f));
+                    }
                 }
 
-                if (presentState.propertyData.get(i).propertyID == 0x0002) {
-                    byte[] bytes = presentState.propertyData.get(i).data;
 
-                    float f = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getFloat();
-                    sensorTitleBuilder.append("Pressure sensor\n");
-                    sensorStateBuilder.append(String.format(Locale.ENGLISH,
-                            "%.1f hPa\n", f / 100));
-                }
-
-                if (presentState.propertyData.get(i).propertyID == 0x0003) {
-                    byte[] bytes = presentState.propertyData.get(i).data;
-
-                    float f = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getFloat();
-                    sensorTitleBuilder.append("Humidity sensor\n");
-                    sensorStateBuilder.append(String.format(Locale.ENGLISH,
-                            "%.1f %%rH\n", f));
-                }
+                sensorTitleBuilder.append("\n");
+                sensorStateBuilder.append("\n");
             }
 
             sensorTitleText.setText(sensorTitleBuilder.toString());

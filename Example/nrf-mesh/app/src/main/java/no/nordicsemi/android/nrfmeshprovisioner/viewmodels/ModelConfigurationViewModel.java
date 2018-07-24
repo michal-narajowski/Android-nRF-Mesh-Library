@@ -26,6 +26,7 @@ import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.ViewModel;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 import javax.inject.Inject;
 
@@ -148,7 +149,7 @@ public class ModelConfigurationViewModel extends ViewModel {
         mModelConfigurationRepository.sendSensorGet(node);
     }
 
-    public LiveData<SensorData> getSensorState() {
+    public LiveData<Map<Integer, SensorData>> getSensorState() {
         return mModelConfigurationRepository.getSensorState();
     }
 }

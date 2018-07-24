@@ -23,6 +23,10 @@
 package no.nordicsemi.android.meshprovisioner;
 
 import android.content.Context;
+import android.util.Log;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import no.nordicsemi.android.meshprovisioner.configuration.ConfigAppKeyAdd;
 import no.nordicsemi.android.meshprovisioner.configuration.ConfigAppKeyStatus;
@@ -46,6 +50,8 @@ import no.nordicsemi.android.meshprovisioner.configuration.MeshModel;
 import no.nordicsemi.android.meshprovisioner.configuration.ProvisionedMeshNode;
 import no.nordicsemi.android.meshprovisioner.configuration.SensorGet;
 import no.nordicsemi.android.meshprovisioner.configuration.SensorStatus;
+import no.nordicsemi.android.meshprovisioner.messages.AccessMessage;
+import no.nordicsemi.android.meshprovisioner.messages.Message;
 import no.nordicsemi.android.meshprovisioner.opcodes.ConfigMessageOpCodes;
 
 class MeshConfigurationHandler {
@@ -57,11 +63,13 @@ class MeshConfigurationHandler {
     private final InternalMeshManagerCallbacks mInternalMeshManagerCallbacks;
     private MeshConfigurationStatusCallbacks mStatusCallbacks;
     private ConfigMessage configMessage;
+    private Map<Integer, ConfigMessage> sensorStatusConfigMessages;
 
     MeshConfigurationHandler(final Context context, final InternalTransportCallbacks internalTransportCallbacks, final InternalMeshManagerCallbacks internalMeshManagerCallbacks) {
         this.mContext = context;
         this.mInternalTransportCallbacks = internalTransportCallbacks;
         this.mInternalMeshManagerCallbacks = internalMeshManagerCallbacks;
+        sensorStatusConfigMessages = new HashMap<>();
     }
 
     public void setConfigurationCallbacks(final MeshConfigurationStatusCallbacks statusCallbacks) {
@@ -69,6 +77,10 @@ class MeshConfigurationHandler {
     }
 
     protected void handleConfigurationWriteCallbacks(final ProvisionedMeshNode meshNode, final byte[] pdu) {
+        if (configMessage == null)  {
+            return;
+        }
+
         switch (configMessage.getState()) {
             case COMPOSITION_DATA_GET:
                 //Composition data get complete,
@@ -107,12 +119,17 @@ class MeshConfigurationHandler {
                 break;
             case SENSOR_GET:
                 //Switch the state to Generic on off status generic on off set is an acknowledged message.
-                configMessage = new SensorStatus(mContext, configMessage.getMeshNode(), configMessage.getMeshModel(), configMessage.getAppKeyIndex(), mInternalTransportCallbacks, mStatusCallbacks);
+                SensorStatus sensorStatus = new SensorStatus(mContext, configMessage.getMeshNode(), configMessage.getMeshModel(), configMessage.getAppKeyIndex(), mInternalTransportCallbacks, mStatusCallbacks);
+                Log.v(TAG, "Sensor Get: Addr " + configMessage.getMeshNode().getUnicastAddressInt());
+                sensorStatusConfigMessages.put(configMessage.getMeshNode().getUnicastAddressInt(), sensorStatus);
+                this.configMessage = null;
                 break;
         }
     }
 
-    protected void parseConfigurationNotifications(final ProvisionedMeshNode meshNode, final byte[] pdu) {
+    protected void parseConfigurationNotificationsMessage(ConfigMessage configMessage,
+                                                          final ProvisionedMeshNode meshNode,
+                                                          final byte[] pdu) {
         switch (configMessage.getState()) {
             case COMPOSITION_DATA_STATUS:
                 final ConfigCompositionDataStatus compositionDataStatus = (ConfigCompositionDataStatus) configMessage;
@@ -127,7 +144,7 @@ class MeshConfigurationHandler {
                 configAppKeyAdd.parseData(pdu);
 
                 //App key add block ack received, switch to next app key add status state.
-                configMessage = new ConfigAppKeyStatus(mContext, meshNode, configAppKeyAdd.getSrc(), configAppKeyAdd.getAppKey(), mInternalTransportCallbacks, mStatusCallbacks);
+                this.configMessage = new ConfigAppKeyStatus(mContext, meshNode, configAppKeyAdd.getSrc(), configAppKeyAdd.getAppKey(), mInternalTransportCallbacks, mStatusCallbacks);
                 break;
             case APP_KEY_STATUS:
                 ((ConfigAppKeyStatus) configMessage).parseData(pdu);
@@ -136,7 +153,7 @@ class MeshConfigurationHandler {
                 final ConfigModelAppBind configModelAppBind = ((ConfigModelAppBind) configMessage);
                 configModelAppBind.parseData(pdu);
                 //publication set block ack received, switch to next state.
-                configMessage = new ConfigModelAppStatus(mContext, meshNode, mInternalTransportCallbacks, mStatusCallbacks);
+                this.configMessage = new ConfigModelAppStatus(mContext, meshNode, mInternalTransportCallbacks, mStatusCallbacks);
             case CONFIG_MODEL_APP_STATUS:
                 ((ConfigModelAppStatus) configMessage).parseData(pdu);
                 break;
@@ -145,7 +162,8 @@ class MeshConfigurationHandler {
                 configModelPublicationSet.parseData(pdu);
                 //TODO check for acknowledged message if the peer has received everything
                 //publication set block ack received, switch to next state.
-                configMessage = new ConfigModelPublicationStatus(mContext, meshNode, mInternalTransportCallbacks, mStatusCallbacks);
+                this.configMessage = new ConfigModelPublicationStatus(mContext, meshNode, mInternalTransportCallbacks, mStatusCallbacks);
+//                this.configMessage = null;
                 break;
             case CONFIG_MODEL_PUBLICATION_STATUS:
                 final ConfigModelPublicationStatus configModelPublicationStatus = (ConfigModelPublicationStatus) configMessage;
@@ -176,6 +194,22 @@ class MeshConfigurationHandler {
                 break;
         }
     }
+
+    protected void parseConfigurationNotifications(final ProvisionedMeshNode meshNode, final byte[] pdu) {
+        Log.v(TAG, "parseConfigurationNotifications");
+        if (configMessage != null) {
+            Log.v(TAG, "configMessage != null");
+            parseConfigurationNotificationsMessage(configMessage, meshNode, pdu);
+        } else {
+            Log.v(TAG, "configMessage == null");
+            for (Integer src: sensorStatusConfigMessages.keySet()) {
+                Log.v(TAG, "configMessage " + src);
+                ConfigMessage sensorStatus = sensorStatusConfigMessages.get(src);
+                parseConfigurationNotificationsMessage(sensorStatus, meshNode, pdu);
+            }
+        }
+    }
+
 
     public ConfigMessage.MessageState getConfigurationState() {
         return configMessage.getState();

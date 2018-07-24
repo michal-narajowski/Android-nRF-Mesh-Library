@@ -30,8 +30,13 @@ import android.util.Log;
 import android.widget.Toast;
 
 import java.lang.reflect.Array;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import no.nordicsemi.android.meshprovisioner.configuration.MeshModel;
 import no.nordicsemi.android.meshprovisioner.configuration.ProvisionedMeshNode;
@@ -60,17 +65,18 @@ public class ModelConfigurationRepository extends BaseMeshRepository {
 
     private static final String TAG = ModelConfigurationRepository.class.getSimpleName();
     private MutableLiveData<Boolean> mPresentState = new MutableLiveData<>();
-    private MutableLiveData<SensorData> mSensorState = new MutableLiveData<>();
+    private MutableLiveData<Map<Integer, SensorData>> mSensorState = new MutableLiveData<>();
 
     public ModelConfigurationRepository(final Context context) {
         super(context);
+        mSensorState.setValue(new TreeMap<>());
     }
 
     public LiveData<Boolean> getGenericOnOffState() {
         return mPresentState;
     }
 
-    public LiveData<SensorData> getSensorState() {
+    public LiveData<Map<Integer, SensorData>> getSensorState() {
         return mSensorState;
     }
 
@@ -216,7 +222,10 @@ public class ModelConfigurationRepository extends BaseMeshRepository {
         switch (action) {
             case ACTION_SENSOR_STATE:
                 final SensorData presentState = intent.getParcelableExtra(EXTRA_SENSOR_STATE);
-                mSensorState.postValue(presentState);
+                Map<Integer, SensorData> map = mSensorState.getValue();
+                ByteBuffer b = ByteBuffer.wrap(presentState.src).order(ByteOrder.LITTLE_ENDIAN);
+                map.put((int) b.getShort(), presentState);
+                mSensorState.postValue(map);
                 break;
         }
     }
