@@ -144,7 +144,7 @@ public class NodeConfigurationRepository extends BaseMeshRepository {
 
 
         //Update the live data upon receiving a broadcast
-        if (node.getUnicastAddressInt() ==
+        if (node != null && node.getUnicastAddressInt() ==
                 mExtendedMeshNode.getMeshNode().getUnicastAddressInt()) {
             mExtendedMeshNode.updateMeshNode(node);
         }
