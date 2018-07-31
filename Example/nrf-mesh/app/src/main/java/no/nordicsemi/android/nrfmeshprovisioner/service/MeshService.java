@@ -60,6 +60,7 @@ import no.nordicsemi.android.meshprovisioner.states.UnprovisionedMeshNode;
 import no.nordicsemi.android.meshprovisioner.utils.AddressUtils;
 import no.nordicsemi.android.meshprovisioner.utils.Element;
 import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils;
+import no.nordicsemi.android.meshprovisioner.utils.Pair;
 import no.nordicsemi.android.meshprovisioner.utils.SensorData;
 import no.nordicsemi.android.nrfmeshprovisioner.R;
 import no.nordicsemi.android.nrfmeshprovisioner.adapter.ExtendedBluetoothDevice;
@@ -171,6 +172,7 @@ public class MeshService extends Service implements BleMeshManagerCallbacks,
      * flag to avoid adding app key when requesting composition data only as the initial provisioning steps of the app will continue adding app key after a composition data get
      **/
     private boolean mShouldAddAppKeyBeAdded = false;
+    private boolean mShouldConfigureSensorSrv = false;
     private BluetoothDevice mBluetoothDevice;
     private String mDeviceName;
     private Handler mHandler;
@@ -583,6 +585,7 @@ public class MeshService extends Service implements BleMeshManagerCallbacks,
                 mMeshManagerApi.addAppKey(node, appKeyIndex, appKey);
                 mAppKeyIndex = 0;
                 mAppKey = null;
+                mShouldConfigureSensorSrv = true;
                 mShouldAddAppKeyBeAdded = false; //set it to false once the message is sent
             }, 1500);
         }
@@ -608,6 +611,17 @@ public class MeshService extends Service implements BleMeshManagerCallbacks,
         intent.putExtra(EXTRA_APP_KEY_INDEX, appKeyIndex);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
         Log.v(TAG, "App key status received: seq" + node.getSequenceNumber());
+
+        if (mShouldConfigureSensorSrv) {
+            mHandler.postDelayed(() -> {
+                Pair<byte[], MeshModel> sensorSrv = node.findSensorServerModel();
+                if (sensorSrv == null) {
+                    return;
+                }
+
+                mMeshManagerApi.bindAppKey(node, sensorSrv.a, sensorSrv.b, appKeyIndex);
+            }, 1500);
+        }
     }
 
     @Override
@@ -629,6 +643,23 @@ public class MeshService extends Service implements BleMeshManagerCallbacks,
         intent.putExtra(EXTRA_APP_KEY_INDEX, appKeyIndex);
         intent.putExtra(EXTRA_MODEL_ID, modelIdentifier);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+
+        if (mShouldConfigureSensorSrv) {
+            mHandler.postDelayed(() -> {
+                Pair<byte[], MeshModel> sensorSrv = node.findSensorServerModel();
+                if (sensorSrv == null) {
+                    return;
+                }
+
+                MeshModel meshModel = sensorSrv.b;
+
+                byte[] publishAddr = new byte[]{(byte)0x07, (byte)0xff};
+
+                mMeshManagerApi.setConfigModelPublishAddress(node,
+                        sensorSrv.a, publishAddr, appKeyIndex, meshModel.getModelId(), 0, 0xFF, 0x5e, 0, 0);
+
+            }, 1500);
+        }
     }
 
     @Override
@@ -654,6 +685,19 @@ public class MeshService extends Service implements BleMeshManagerCallbacks,
         intent.putExtra(EXTRA_PUBLISH_ADDRESS, publishAddress);
         intent.putExtra(EXTRA_MODEL_ID, modelIdentifier);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+
+        if (mShouldConfigureSensorSrv) {
+            mHandler.postDelayed(() -> {
+                Pair<byte[], MeshModel> sensorSrv = node.findSensorServerModel();
+                if (sensorSrv == null) {
+                    return;
+                }
+
+                mMeshManagerApi.getSensor(node, sensorSrv.b, sensorSrv.a, mAppKeyIndex);
+
+                mShouldConfigureSensorSrv = false;
+            }, 1500);
+        }
     }
 
     @Override

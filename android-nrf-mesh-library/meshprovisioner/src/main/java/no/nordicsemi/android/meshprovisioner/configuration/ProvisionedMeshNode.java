@@ -22,6 +22,7 @@
 
 package no.nordicsemi.android.meshprovisioner.configuration;
 
+import android.graphics.ColorSpace;
 import android.os.Parcel;
 import android.support.annotation.VisibleForTesting;
 
@@ -33,8 +34,10 @@ import java.util.Map;
 import java.util.Set;
 
 import no.nordicsemi.android.meshprovisioner.BaseMeshNode;
+import no.nordicsemi.android.meshprovisioner.models.SensorServer;
 import no.nordicsemi.android.meshprovisioner.states.UnprovisionedMeshNode;
 import no.nordicsemi.android.meshprovisioner.utils.Element;
+import no.nordicsemi.android.meshprovisioner.utils.Pair;
 import no.nordicsemi.android.meshprovisioner.utils.SecureUtils;
 
 public class ProvisionedMeshNode extends BaseMeshNode {
@@ -292,5 +295,20 @@ public class ProvisionedMeshNode extends BaseMeshNode {
         for(int key : orderedKeys) {
             mElements.put(key, unorderedElements.get(key));
         }
+    }
+
+    public Pair<byte[], MeshModel> findSensorServerModel() {
+        for (int elemKey : mElements.keySet()) {
+            Element el = mElements.get(elemKey);
+            Map<Integer, MeshModel> models = el.getMeshModels();
+            for (int modelKey : models.keySet()) {
+                MeshModel m = models.get(modelKey);
+                if (m instanceof SensorServer) {
+                    return new Pair<>(el.getElementAddress(), m);
+                }
+            }
+        }
+
+        return null;
     }
 }
